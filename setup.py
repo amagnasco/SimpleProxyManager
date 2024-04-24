@@ -14,8 +14,6 @@ setup(
    author_email='amagnasco@gradcenter.cuny.edu',
    url="http://www.github.com/amagnasco/proxyManager",
    packages=['proxyManager'],
-   install_requires=['threading', 'queue', 'asyncio', 'urllib', 'random', 'time'],
-   dev=[
-            'dev/example',
-           ]
+   install_requires=['asyncio', 'urllib3'],
+   dev=['dev/example']
 )

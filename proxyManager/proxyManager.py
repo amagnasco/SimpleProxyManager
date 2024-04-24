@@ -1,4 +1,6 @@
-### proxy manager by @amagnasco
+### proxyManager.py
+# by Alessandro G. Magnasco 2024
+# licenced under Creative Commons CC-BY-SA 4.0
 # https://github.com/amagnasco/proxymanager
 
 # concurrency

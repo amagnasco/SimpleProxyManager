@@ -1,2 +1,7 @@
-proxies.txt
+# build dependencies
 proxyTestEnv/
+proxyManager.egg-info/
+build/
+dist/
+
+proxies.txt
