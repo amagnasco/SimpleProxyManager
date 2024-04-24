@@ -1,10 +1,8 @@
 # this is an example file for development purposes
 
 ### IMPORTS
-
 import os
-import asyncio
-from src import ProxyManager
+from proxyManager import ProxyManager
 
 ### SETTINGS
 
@@ -42,7 +40,7 @@ filepath = os.path.join(__location__, filename)
 
 # start
 proxies = ProxyManager(threads, wait, headers, test)
-await proxies.load(filepath)
+proxies.load(filepath)
 
 # test
 proxies.available()
