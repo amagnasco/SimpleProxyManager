@@ -1,0 +1,11 @@
+# sample proxy list to use
+# blank lines are ignored, as are # comments
+
+# Earth
+1.2.3.4:56
+2.3.4.5:67
+3.4.5.6:78
+
+# Moon
+4.5.6.7:89
+5.6.7.8:90
