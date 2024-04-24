@@ -6,7 +6,6 @@
 # concurrency
 import threading
 import queue
-import asyncio
 # HTTP
 import urllib.request
 from urllib.parse import urlparse
@@ -31,7 +30,7 @@ class ProxyManager:
             raise Exception("Setup error: test URI invalido!")
         
     # initial load, single thread
-    async def load(self, path):
+    def load(self, path):
         fn = self.f + " load"
 
         if not path:
@@ -63,7 +62,7 @@ class ProxyManager:
             threading.Thread(target=self.healthcheck).start()
 
     # go through all and test, thread-safe
-    async def healthcheck(self):
+    def healthcheck(self):
         fn = self.f + " healthcheck"
         valid = 0
         broken = 0
@@ -82,7 +81,7 @@ class ProxyManager:
                 sleep = random.randint(self.test["min"], self.test["max"])
                 #print(fn + ": sleeping " + str(sleep) + "s...")
                 time.sleep(sleep) 
-                await self.get(p, self.test["uri"])
+                self.get(p, self.test["uri"])
             except Exception as err:
                 #print(fn+": broken " + p + " (" + str(err) + ")")
                 broken += 1
@@ -96,7 +95,7 @@ class ProxyManager:
         return
 
     # getter
-    async def get(self, p, url):
+    def get(self, p, url):
         fn = self.f + " get"
         #print(fn + ": usando proxy " + p + " para url " + url + "...")
 
@@ -114,7 +113,7 @@ class ProxyManager:
         req.add_header('Accept-Language', self.headers["accept_language"])
 
         try:
-            res = await urllib.request.urlopen(req, proxies=json)
+            res = urllib.request.urlopen(req, proxies=json)
         except:
             self.broken.put(p)
             raise Exception(fn + " error: proxy " + p + " esta roto!")
@@ -124,7 +123,7 @@ class ProxyManager:
             return res
 
     # process request, thread-safe
-    async def req(self, url, headers):
+    def req(self, url, headers):
         fn = self.f + " req"
 
         print(fn+"...")
@@ -139,7 +138,7 @@ class ProxyManager:
             # wait before requesting
             time.sleep(random.randint(self.wait.min, self.wait.max))
             # getter
-            res = await self.get(p, validated)
+            res = self.get(p, validated)
             if res.status_code == 200:
                 return res
 
