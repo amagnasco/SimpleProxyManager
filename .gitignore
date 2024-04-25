@@ -3,5 +3,6 @@ proxyTestEnv
 SimpleProxyManager.egg-info
 build
 dist
+__pycache__
 
 proxies.txt
