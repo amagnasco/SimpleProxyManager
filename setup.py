@@ -8,7 +8,7 @@ setup(
    name='SimpleProxyManager',
    version='0.1.0',
    description='Simple Python multithreaded proxy manager, focused on scrapes',
-   license="CC-BY-SA-4.0",
+   license="GPLv3",
    long_description=long_description,
    author='Alessandro G. Magnasco',
    author_email='amagnasco@gradcenter.cuny.edu',

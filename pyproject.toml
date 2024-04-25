@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69.5.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SimpleProxyManager"
+version = "0.1.0"
+description = "Simple Python multithreaded proxy manager, focused on scrapes"
+readme = "README.md"
+authors = [{ name = "Alessandro G. Magnasco", email = "amagnasco@gradcenter.cuny.edu"}]
+license = { file = "LICENSE.md"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3"
+    ]
+keywords = ["proxy","scraper","web","http"]
+dependencies = [
+    "certifi>=2024.2.2",
+    "charset-normalizer>=3.3.2",
+    "idna>=3.7",
+    "requests>=2.31.0",
+    "urllib3>=2.2.1"
+    ]
+requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/amagnasco/SimpleProxyManager"
