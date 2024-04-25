@@ -64,11 +64,20 @@ class SimpleProxyManager:
         else:
             print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime)) + "s...")
 
+        # collect the threads to use
+        threads = []
+
         # run health check multi-thread
         for _ in range(self.threads):
-            threading.Thread(target=self.healthcheck).start()
+            thread = threading.Thread(target=self.healthcheck)
+            thread.start()
+            threads.append(thread)
 
-        # print available proxies --> async issue
+        # wait for threads to complete
+        for thread in threads:
+            thread.join()
+
+        # print available proxies
         self.available()
 
     # go through all and test, thread-safe
@@ -175,4 +184,9 @@ class SimpleProxyManager:
         print(self.f + " has " + str(ready) + " proxies currently available.")
         return ready
 
-    
+    # list broken proxies
+    def broken(self):
+        arr = list(self.broken)
+        print(self.f + " has " + str(arr.length) + " broken proxies: " + str(arr))
+        return arr
+
