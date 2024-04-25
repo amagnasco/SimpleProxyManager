@@ -15,7 +15,7 @@ import time
 
 class SimpleProxyManager:
     def __init__(self, threads, wait, headers, test):
-        self.f = "ProxyManager"
+        self.f = "SimpleProxyManager"
         # conf
         self.threads = threads
         self.wait = wait

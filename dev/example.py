@@ -2,7 +2,7 @@
 
 ### IMPORTS
 import os
-from ..SimpleProxyManager import SimpleProxyManager
+from SimpleProxyManager.SimpleProxyManager import SimpleProxyManager
 
 ### SETTINGS
 
@@ -40,7 +40,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 filepath = os.path.join(__location__, filename)
 
 # start
-proxies = ProxyManager(threads, wait, headers, test)
+proxies = SimpleProxyManager(threads, wait, headers, test)
 proxies.load(filepath)
 
 # test
