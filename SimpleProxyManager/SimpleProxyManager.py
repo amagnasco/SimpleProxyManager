@@ -56,12 +56,20 @@ class SimpleProxyManager:
                     self.all.put(p)
 
         print(fn + ": " + str(read) + " proxies leídos de la lista...")
-        print(fn + ": each thread should test about ~" + str(self.all.qsize()/self.threads) + " proxies...")
-        print(fn + ": this should take less than " + str((self.all.qsize()*(self.test['max']))/60) + "m...")
+        n_per_thread = self.all.qsize()/self.threads
+        print(fn + ": each thread should test about ~" + str(n_per_thread) + " proxies...")
+        maxtime = (n_per_thread*(self.test['max']))
+        if maxtime > 60:
+            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime/60)) + "m...")
+        else:
+            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime)) + "s...")
 
         # run health check multi-thread
         for _ in range(self.threads):
             threading.Thread(target=self.healthcheck).start()
+
+        # print available proxies --> async issue
+        self.available()
 
     # go through all and test, thread-safe
     def healthcheck(self):
@@ -85,7 +93,7 @@ class SimpleProxyManager:
                 time.sleep(sleep) 
                 self.get(p, self.test["uri"])
             except Exception as err:
-                print(fn+": broken " + p + " (" + str(err) + ")")
+                #print(fn+": broken " + p + " (" + str(err) + ")")
                 broken += 1
                 continue
             else:
@@ -120,7 +128,7 @@ class SimpleProxyManager:
         req.add_header('Accept-Language', self.headers["accept_language"])
 
         try:
-            res = urllib.request.urlopen(req)
+            res = urllib.request.urlopen(req, timeout=self.wait['timeout'])
         except Exception as err:
             self.broken.put(p)
             raise Exception(fn + " error! using proxy " + p + " for " + uri + ". Trace: " + str(err))
@@ -133,10 +141,11 @@ class SimpleProxyManager:
     def req(self, uri):
         fn = self.f + " req"
 
-        print(fn+"...")
         # check if URL is valid, or will blow through the list
         if not self.validate(uri):
             raise Exception(fn + " error: invalid URI! (" + uri + ")")
+
+        print(fn+": getting " + uri + " ...")
 
         # run through queue
         while not self.ready.empty():

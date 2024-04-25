@@ -15,7 +15,8 @@ threads = 10
 # wait time in seconds
 wait = {
     "min": 3,
-    "max": 8
+    "max": 8,
+    "timeout": 3
 }
 
 # query headers
