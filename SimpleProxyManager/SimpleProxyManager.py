@@ -95,7 +95,7 @@ class SimpleProxyManager:
         return
 
     # getter
-    def get(self, p, url):
+    def get(self, p, uri):
         fn = self.f + " get"
         #print(fn + ": usando proxy " + p + " para url " + url + "...")
 
@@ -107,7 +107,7 @@ class SimpleProxyManager:
         }
 
         # configure headers
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(uri)
         req.add_header('User-Agent', self.headers["ua"])
         req.add_header('Accept', self.headers["accept"])
         req.add_header('Accept-Language', self.headers["accept_language"])
@@ -123,12 +123,12 @@ class SimpleProxyManager:
             return res
 
     # process request, thread-safe
-    def req(self, url, headers):
+    def req(self, uri):
         fn = self.f + " req"
 
         print(fn+"...")
         # check if URL is valid, or will blow through the list
-        if not self.validate(url):
+        if not self.validate(uri):
             raise Exception(fn + " error: invalid URI! (" + url + ")")
 
         # run through queue
