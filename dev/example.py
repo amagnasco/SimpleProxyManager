@@ -1,10 +1,15 @@
 # this is an example file for development purposes
 
-### IMPORTS
+#################
+#    IMPORTS    #
+#################
+
 import os
 from SimpleProxyManager.SimpleProxyManager import SimpleProxyManager
 
-### SETTINGS
+#################
+#   SETTINGS    #
+#################
 
 # list of proxies
 filename = "proxies.txt"
@@ -34,22 +39,55 @@ test = {
     "max": 3
 }
 
-### USAGE
+# example test URL to scrape
+url = "http://books.toscrape.com/catalogue/page-{}.html"
+pages = 20
+encoding = 'latin1'
+
+#################
+#     USAGE     #
+#################
+
+print('>> Welcome to the example for SimpleProxyManager.py!')
 
 # set workdir
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 filepath = os.path.join(__location__, filename)
 
 # start
+print('>> Starting up proxy management system...')
 proxies = SimpleProxyManager(threads, wait, headers, test)
 proxies.load(filepath)
 
-# test -- breaks async
-#proxies.available()
+# stoplight
+print('>> Waiting for system to be ready...')
+ready = False
+while ready == False:
+    p = proxies.available()
+    if p >= 1:
+        ready = True
 
-# query an URL:
-#url = "http://example.com"
-#proxies.req(url)
+# set up URLs
+urls = []
+for i in range(2, pages):
+    urls.append(url.format(i))
+print(urls)
 
-# parse
-# .read().decode(encoding)
+# test URLs
+print('>> Scraping test URLs...')
+scraped = []
+for p in urls:
+    try:
+        page = proxies.req(p)
+    
+        if page['success'] == False:
+            raise Exception(str(page['error']))
+
+        decoded = page['data'].read().decode(encoding)
+        #print(decoded)
+        scraped.append(decoded)
+        print("Successfully scraped page " + str(p))
+    except Exception as err:
+        print("Couldn't scrape page " + str(p) + ": " + str(err))
+
+print('>> Example completed!')

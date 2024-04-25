@@ -149,25 +149,32 @@ class SimpleProxyManager:
     # process request, thread-safe
     def req(self, uri):
         fn = self.f + " req"
+        try:
+            # check if URL is valid, or will blow through the list
+            if not self.validate(uri):
+                raise Exception(fn + " error: invalid URI! (" + uri + ")")
 
-        # check if URL is valid, or will blow through the list
-        if not self.validate(uri):
-            raise Exception(fn + " error: invalid URI! (" + uri + ")")
+            #print(fn+": getting " + uri + " ...")
 
-        print(fn+": getting " + uri + " ...")
+            # run through queue
+            while not self.ready.empty():
+                # assign a new proxy
+                p = self.ready.get()
+                # wait before requesting
+                time.sleep(random.randint(self.wait['min'], self.wait['max']))
 
-        # run through queue
-        while not self.ready.empty():
-            # assign a new proxy
-            p = self.ready.get()
-            # wait before requesting
-            time.sleep(random.randint(self.wait.min, self.wait.max))
-            # getter
-            res = self.get(p, validated)
-            if res.status_code == 200:
-                return res
+                try:
+                    # getter
+                    res = self.get(p, uri)
+                    #print('status is: ' + str(res.status))
+                except HTTPError as err:
+                    raise Exception(fn + " error: HTTP response was " + str(err.reason))
+                else:
+                    return {"success": True, "data": res}
 
-        raise Exception(fn + " error: no hay proxies disponibles!")
+            raise Exception(fn + " error: no hay proxies disponibles!")
+        except Exception as err:
+            return {"success": False, "error": err}
 
     # validate URIs
     def validate(self, uri):
