@@ -28,7 +28,7 @@ headers = {
 # configuration for health check
 # min and max are wait time in seconds, usually shorter than prod
 test = {
-    "uri": "http://ipinfo.io/json",
+    "uri": "http://books.toscrape.com/",
     "min": 1,
     "max": 3
 }
@@ -43,8 +43,8 @@ filepath = os.path.join(__location__, filename)
 proxies = SimpleProxyManager(threads, wait, headers, test)
 proxies.load(filepath)
 
-# test
-proxies.available()
+# test -- breaks async
+#proxies.available()
 
 # query an URL:
 #url = "http://example.com"

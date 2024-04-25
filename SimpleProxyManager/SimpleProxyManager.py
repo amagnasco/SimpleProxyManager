@@ -56,6 +56,8 @@ class SimpleProxyManager:
                     self.all.put(p)
 
         print(fn + ": " + str(read) + " proxies leídos de la lista...")
+        print(fn + ": each thread should test about ~" + str(self.all.qsize()/self.threads) + " proxies...")
+        print(fn + ": this should take less than " + str((self.all.qsize()*(self.test['max']))/60) + "m...")
 
         # run health check multi-thread
         for _ in range(self.threads):
@@ -70,7 +72,7 @@ class SimpleProxyManager:
         if not self.all.qsize() > 1:
             return
 
-        print(fn + ": abriendo hilo, N=" + str(self.all.qsize()) + "...")
+        #print(fn + ": abriendo hilo, N=" + str(self.all.qsize()) + "...")
 
         while not self.all.empty():
             # pull a proxy from the list
@@ -83,7 +85,7 @@ class SimpleProxyManager:
                 time.sleep(sleep) 
                 self.get(p, self.test["uri"])
             except Exception as err:
-                #print(fn+": broken " + p + " (" + str(err) + ")")
+                print(fn+": broken " + p + " (" + str(err) + ")")
                 broken += 1
                 continue
             else:
@@ -97,7 +99,7 @@ class SimpleProxyManager:
     # getter
     def get(self, p, uri):
         fn = self.f + " get"
-        #print(fn + ": usando proxy " + p + " para url " + url + "...")
+        #print(fn + ": usando proxy " + p + " para url " + uri + "...")
 
         # define usage schema
         # assuming p is valid for both
@@ -106,6 +108,11 @@ class SimpleProxyManager:
             "https": p
         }
 
+        # configure proxy
+        proxy_support = urllib.request.ProxyHandler(json)
+        opener = urllib.request.build_opener(proxy_support)
+        urllib.request.install_opener(opener)
+
         # configure headers
         req = urllib.request.Request(uri)
         req.add_header('User-Agent', self.headers["ua"])
@@ -113,12 +120,12 @@ class SimpleProxyManager:
         req.add_header('Accept-Language', self.headers["accept_language"])
 
         try:
-            res = urllib.request.urlopen(req, proxies=json)
-        except:
+            res = urllib.request.urlopen(req)
+        except Exception as err:
             self.broken.put(p)
-            raise Exception(fn + " error: proxy " + p + " esta roto!")
+            raise Exception(fn + " error! using proxy " + p + " for " + uri + ". Trace: " + str(err))
         else:
-            print(fn + ": exitoso")
+            #print(fn + ": exitoso")
             self.ready.put(p)
             return res
 
@@ -129,7 +136,7 @@ class SimpleProxyManager:
         print(fn+"...")
         # check if URL is valid, or will blow through the list
         if not self.validate(uri):
-            raise Exception(fn + " error: invalid URI! (" + url + ")")
+            raise Exception(fn + " error: invalid URI! (" + uri + ")")
 
         # run through queue
         while not self.ready.empty():
