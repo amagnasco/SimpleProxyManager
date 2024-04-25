@@ -36,11 +36,11 @@ This project uses semantic versioning.
     - add i18n
     - improve HTTP status code handling
     - differentiate input proxy list by http/https
-    - publish to pypi
     - add a "reset queues to all" method
     - improve manual exit handling
-    - publish github package
     - abstract proxy assigner method from req
     - improve input and type checking
+- ### 0.1.1:
+	- added GitHub > PyPi publication workflow
 - ### 0.1.0:
     - First release! Functional enough to share, but some logs might still be in Spanish while I sort out the i18n. 
