@@ -1,7 +1,7 @@
-### proxyManager.py
+### SimpleProxyManager.py
 # by Alessandro G. Magnasco 2024
 # licenced under Creative Commons CC-BY-SA 4.0
-# https://github.com/amagnasco/proxymanager
+# https://github.com/amagnasco/SimpleProxyManager
 
 # concurrency
 import threading
@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import random
 import time
 
-class ProxyManager:
+class SimpleProxyManager:
     def __init__(self, threads, wait, headers, test):
         self.f = "ProxyManager"
         # conf

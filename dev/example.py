@@ -2,7 +2,7 @@
 
 ### IMPORTS
 import os
-from proxyManager import ProxyManager
+from ..SimpleProxyManager import SimpleProxyManager
 
 ### SETTINGS
 
@@ -26,6 +26,7 @@ headers = {
 }
 
 # configuration for health check
+# min and max are wait time in seconds, usually shorter than prod
 test = {
     "uri": "http://ipinfo.io/json",
     "min": 1,

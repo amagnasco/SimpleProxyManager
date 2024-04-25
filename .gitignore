@@ -1,6 +1,6 @@
 # build dependencies
 proxyTestEnv
-proxyManager.egg-info
+SimpleProxyManager.egg-info
 build
 dist
 

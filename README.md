@@ -1,5 +1,5 @@
-# proxyManager
-Simple Python multithreaded proxy manager, focused on scrapes
+# SimpleProxyManager
+Python multithreaded proxy manager, focused on scrapes
 
 to-do:
 - working first version
