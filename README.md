@@ -2,6 +2,7 @@
 Python multithreaded proxy manager, focused on scrapes
 
 This project lives at https://github.com/amagnasco/SimpleProxyManager. Feel free to submit an issue or improvements!
+Releases: https://pypi.org/project/SimpleProxyManager/
 
 Warning: if using on macOS, don't use this if also using os.fork() due to dependency urllib.request
 
