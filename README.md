@@ -30,6 +30,8 @@ Major dependencies: requests, urllib3.
 ## Version History
 This project uses semantic versioning. 
 - ### to-do:
+    - !! handle HTTPErrors into general exceptions
+    - !! improve exit condition when 0 proxies available
     - improve usage docs
     - improve error handling
     - add test cases
