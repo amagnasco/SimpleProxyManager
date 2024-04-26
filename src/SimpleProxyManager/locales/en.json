@@ -1,0 +1,28 @@
+{
+    "common": {
+        "ProxyManager": "Proxy Manager",
+        "available": "{} proxies currently available.",
+        "broken": "{} proxies marked as broken: {}"
+    },
+    "error": {
+        "test_uri": "Setup error: invalid test URI",
+        "no_list": "error: no list of proxies given!",
+        "list_empty": "error: proxy list is empty!",
+        "get": " error: using proxy {} for {}. Trace: {}",
+        "bad_uri": "error: invalid URI! ({})",
+        "bad_response": "error: HTTP response was: {}",
+        "no_proxies_avail": "error: no proxies available!"
+    },
+    "setup":{
+        "threads": "started with {} threads..."
+    },
+    "load": {
+        "loading": "loading list of proxies from {} ...",
+        "n_read": "{} proxies read from the list...",
+        "per_thread": "each thread should test about ~{} proxies...",
+        "less_than": "this should take less than {}{}..."
+    },
+    "healthcheck": {
+        "status": "{} valid, {} broken"
+    }
+}

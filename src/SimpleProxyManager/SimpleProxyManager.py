@@ -1,7 +1,8 @@
 ### SimpleProxyManager.py
 # by Alessandro G. Magnasco 2024
-# licenced under Creative Commons CC-BY-SA 4.0
+# licenced under GNU GPL
 # https://github.com/amagnasco/SimpleProxyManager
+# https://pypi.org/project/SimpleProxyManager/
 
 # concurrency
 import threading
@@ -12,10 +13,13 @@ from urllib.parse import urlparse
 # time management
 import random
 import time
+# localization
+import os
+import json
 
-class SimpleProxyManager:
-    def __init__(self, threads, wait, headers, test):
-        self.f = "SimpleProxyManager"
+class ProxyManager:
+    def __init__(self, threads: int, wait: dict, headers: dict, test: dict, locale: str):
+        self.f = "ProxyManager"
         # conf
         self.threads = threads
         self.wait = wait
@@ -25,25 +29,37 @@ class SimpleProxyManager:
         self.all = queue.Queue()
         self.ready = queue.Queue()
         self.broken = queue.Queue()
-        # validar setup
+        # i18n: locale is a str of format "en" or "es"
+        self._i18
+        # run setup
+        __setup(locale)
+
+    # initial setup
+    def __setup(self, locale) -> None:
+        fn = self.f + " setup: "
+        # check test URI
         if not self.validate(self.test["uri"]):
-            raise Exception("Setup error: test URI invalido!")
-        
-    # initial load, single thread
-    def load(self, path):
-        fn = self.f + " load"
+            raise Exception(self._i18('error.test_uri'))
+        # load locale
+        self.__load_i18(locale ? locale : "en")
+        # start
+        print(fn + self.__t('setup.threads', str(self.threads)))
+        return
+
+    # proxy list load, thread-safe
+    def load(self, path: str):
+        fn = self.f + " load: "
 
         if not path:
-            raise Exception(fn + " error: no hay lista de proxies!")
-        print(fn + ": iniciando con " + str(self.threads) + " hilos...")
-        print(fn + ": cargando lista de proxies de {}...".format(path))
+            raise Exception(fn + self.__t('error.no_list'))
+        print(fn + self.__t('load.loading', path))
         read = 0
 
         # load the list
         with open(path, "r") as f:
             arr = f.read().split("\n") # on line break
             if not arr:
-                raise Exception(fn + " error: archivo de proxies vacio! ({})".format(path))
+                raise Exception(fn + self.__t('error.list_empty'))
             for p in arr:
                 if not p:
                     continue
@@ -55,14 +71,14 @@ class SimpleProxyManager:
                     read += 1
                     self.all.put(p)
 
-        print(fn + ": " + str(read) + " proxies leídos de la lista...")
+        print(fn + self.__t('load.n_read', str(read)))
         n_per_thread = self.all.qsize()/self.threads
-        print(fn + ": each thread should test about ~" + str(n_per_thread) + " proxies...")
+        print(fn + self.__t('load.per_thread', str(n_per_thread)))
         maxtime = (n_per_thread*(self.test['max']))
         if maxtime > 60:
-            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime/60)) + "m...")
+            print(fn + self.__t('load.less_than', (str("{0:.2f}".format(maxtime/60)),"m")))
         else:
-            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime)) + "s...")
+            print(fn + self.__t('load.less_than', (str("{0:.0f}".format(maxtime)),"s")))
 
         # collect the threads to use
         threads = []
@@ -78,11 +94,11 @@ class SimpleProxyManager:
             thread.join()
 
         # print available proxies
-        self.available()
+        print(self.available().length)
 
-    # go through all and test, thread-safe
-    def healthcheck(self):
-        fn = self.f + " healthcheck"
+    # go through "all" queue and test, thread-safe
+    def healthcheck(self) -> None:
+        fn = self.f + " healthcheck: "
         valid = 0
         broken = 0
 
@@ -110,12 +126,12 @@ class SimpleProxyManager:
                 continue
 
         # don't throw error here
-        print(fn + ": " + str(valid) + " validos, " + str(broken) + " rotos.")
+        print(fn + self.__t('healthcheck.status', (str(valid), str(broken))))
         return
 
     # getter
-    def get(self, p, uri):
-        fn = self.f + " get"
+    def get(self, p, uri: str):
+        fn = self.f + " get: "
         #print(fn + ": usando proxy " + p + " para url " + uri + "...")
 
         # define usage schema
@@ -140,19 +156,19 @@ class SimpleProxyManager:
             res = urllib.request.urlopen(req, timeout=self.wait['timeout'])
         except Exception as err:
             self.broken.put(p)
-            raise Exception(fn + " error! using proxy " + p + " for " + uri + ". Trace: " + str(err))
+            raise Exception(fn + self.__t('error.get', (p, uri, str(err))))
         else:
             #print(fn + ": exitoso")
             self.ready.put(p)
             return res
 
     # process request, thread-safe
-    def req(self, uri):
+    def req(self, uri: str):
         fn = self.f + " req"
         try:
             # check if URL is valid, or will blow through the list
             if not self.validate(uri):
-                raise Exception(fn + " error: invalid URI! (" + uri + ")")
+                raise Exception(fn + self.__t('error.bad_uri', uri))
 
             #print(fn+": getting " + uri + " ...")
 
@@ -168,16 +184,16 @@ class SimpleProxyManager:
                     res = self.get(p, uri)
                     #print('status is: ' + str(res.status))
                 except HTTPError as err:
-                    raise Exception(fn + " error: HTTP response was " + str(err.reason))
+                    raise Exception(fn + self.__t('error.bad_response', str(err.reason)))
                 else:
                     return {"success": True, "data": res}
 
-            raise Exception(fn + " error: no hay proxies disponibles!")
+            raise Exception(fn + self.__t('error.no_proxies_avail'))
         except Exception as err:
             return {"success": False, "error": err}
 
     # validate URIs
-    def validate(self, uri):
+    def validate(self, uri: str):
         #print("validating "+uri+"...")
         try:
             result = urlparse(uri)
@@ -185,15 +201,28 @@ class SimpleProxyManager:
         except AttributeError:
             return False
 
-    # check number of proxies that are ready
-    def available(self):
-        ready = self.ready.qsize()
-        print(self.f + " has " + str(ready) + " proxies currently available.")
+    # list available proxies
+    def available(self) -> list:
+        ready = list(self.ready)
+        print(self.f + ": " + self.__t('common.available', str(ready.length)))
         return ready
 
     # list broken proxies
-    def broken(self):
+    def broken(self) -> list:
         arr = list(self.broken)
-        print(self.f + " has " + str(arr.length) + " broken proxies: " + str(arr))
+        print(self.f + ": "+ self.__t('common.broken', (str(arr.length), str(arr))))
         return arr
+
+    # private: i18n
+    def __t(self, key: str, insert: str) -> str:
+        if not insert:
+            return self._i18[key]
+        else:
+            return self._i18[key].format(insert)
+
+    # private: load i18
+    def __load_i18(self, locale: str):
+        filepath = "locales/{}.json".format(locale)
+        with open(filepath, "r") as f:
+            self._i18 = json.load(f)
 
