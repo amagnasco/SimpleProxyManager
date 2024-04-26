@@ -43,8 +43,8 @@ This project uses semantic versioning.
     - improve manual exit handling
     - abstract proxy assigner method from req
     - improve input and type checking
+    - consolidate load conf into one dict/json
 - ### 0.1.1:
 	- added GitHub > PyPi publication workflow
-    - consolidate load conf into one dict/json
 - ### 0.1.0:
     - First release! Functional enough to share, but some logs might still be in Spanish while I sort out the i18n. 
