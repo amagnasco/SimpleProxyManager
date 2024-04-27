@@ -31,6 +31,7 @@ Major dependencies: requests, urllib3.
 ## Version History
 This project uses semantic versioning. 
 - ### to-do:
+    - abstract proxy assigner method from req
     - improve usage docs
     - improve error handling
     - add test cases
@@ -38,7 +39,6 @@ This project uses semantic versioning.
     - differentiate input proxy list by http/https
     - add a "reset queues to all" method
     - improve manual exit handling
-    - abstract proxy assigner method from req
 - ### 0.2.0:
     - add i18n
     - consolidate load conf into one dict/json

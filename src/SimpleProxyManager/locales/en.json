@@ -7,6 +7,7 @@
     "error": {
         "test_uri": "Setup error: invalid test URI",
         "no_list": "error: no list of proxies given!",
+        "no_file": "error: no file at given location!",
         "list_empty": "error: proxy list is empty!",
         "get": " error: using proxy {} for {}. Trace: {}",
         "bad_uri": "error: invalid URI! ({})",
