@@ -18,30 +18,33 @@ import os
 import json
 
 class ProxyManager:
-    def __init__(self, threads: int, wait: dict, headers: dict, test: dict, locale: str):
+    def __init__(self, conf):
         self.f = "ProxyManager"
         # conf
-        self.threads = threads
-        self.wait = wait
-        self.headers = headers
-        self.test = test
+        self.threads = conf["threads"]
+        self.wait = conf["wait"]
+        self.headers = conf["headers"]
+        self.test = conf["test"]
         # proxies
         self.all = queue.Queue()
         self.ready = queue.Queue()
         self.broken = queue.Queue()
         # i18n: locale is a str of format "en" or "es"
-        self._i18
+        self._i18: dict
         # run setup
-        __setup(locale)
+        self.__setup(conf["locale"])
 
     # initial setup
     def __setup(self, locale) -> None:
         fn = self.f + " setup: "
+        # load locale
+        if not locale:
+            self.__load_i18("en")
+        else:
+            self.__load_i18(locale)
         # check test URI
         if not self.validate(self.test["uri"]):
-            raise Exception(self._i18('error.test_uri'))
-        # load locale
-        self.__load_i18(locale ? locale : "en")
+            raise Exception(self.__t('error.test_uri'))
         # start
         print(fn + self.__t('setup.threads', str(self.threads)))
         return
@@ -183,7 +186,7 @@ class ProxyManager:
                     # getter
                     res = self.get(p, uri)
                     #print('status is: ' + str(res.status))
-                except HTTPError as err:
+                except Exception as err:
                     raise Exception(fn + self.__t('error.bad_response', str(err.reason)))
                 else:
                     return {"success": True, "data": res}
@@ -214,15 +217,18 @@ class ProxyManager:
         return arr
 
     # private: i18n
-    def __t(self, key: str, insert: str) -> str:
+    def __t(self, key: str, insert) -> str:
+        value = self._i18.get(key,"i18n error!")
         if not insert:
-            return self._i18[key]
+            return value
         else:
-            return self._i18[key].format(insert)
+            return value.format(insert)
 
     # private: load i18
-    def __load_i18(self, locale: str):
-        filepath = "locales/{}.json".format(locale)
+    def __load_i18(self, locale: str) -> None:
+        basepath = os.path.dirname(os.path.abspath(__file__))
+        locspath = os.path.join(basepath, "locales/")
+        filepath = os.path.join(locspath, "{}.json".format(locale))
         with open(filepath, "r") as f:
             self._i18 = json.load(f)
-
+        return

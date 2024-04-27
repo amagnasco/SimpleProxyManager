@@ -5,39 +5,34 @@
 #################
 
 import os
-from SimpleProxyManager.SimpleProxyManager import SimpleProxyManager
+from SimpleProxyManager import ProxyManager
 
 #################
 #   SETTINGS    #
 #################
 
+conf = {
+    "threads": 10,      # process threads to use
+    "wait": {           # wait time between requests, and http timeout, all in seconds
+        "min": 3,
+        "max": 8,
+        "timeout": 3
+    },
+    "headers": {        # query headers
+        "ua": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0',
+        "accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        "accept_language": 'en-US,en;q=0.5'
+    },
+    "test": {           # health check configuration
+        "uri": "http://books.toscrape.com/", # example test url 
+        "min": 1,       # wait time between health check requests (per thread, so still overlaps)
+        "max": 3
+    },
+    "locale": "en"      # localization
+}
+
 # list of proxies
 filename = "proxies.txt"
-
-# number of threads to use
-threads = 10
-
-# wait time in seconds
-wait = {
-    "min": 3,
-    "max": 8,
-    "timeout": 3
-}
-
-# query headers
-headers = {
-    "ua": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0',
-    "accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    "accept_language": 'en-US,en;q=0.5'
-}
-
-# configuration for health check
-# min and max are wait time in seconds, usually shorter than prod
-test = {
-    "uri": "http://books.toscrape.com/",
-    "min": 1,
-    "max": 3
-}
 
 # example test URL to scrape
 url = "http://books.toscrape.com/catalogue/page-{}.html"
@@ -56,7 +51,7 @@ filepath = os.path.join(__location__, filename)
 
 # start
 print('>> Starting up proxy management system...')
-proxies = SimpleProxyManager(threads, wait, headers, test)
+proxies = ProxyManager(conf)
 proxies.load(filepath)
 
 # stoplight
