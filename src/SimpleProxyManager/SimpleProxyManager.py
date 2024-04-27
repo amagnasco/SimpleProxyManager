@@ -21,10 +21,12 @@ class ProxyManager:
     def __init__(self, conf):
         self.f = "ProxyManager"
         # conf
-        self.threads = conf["threads"]
         self.wait = conf["wait"]
         self.headers = conf["headers"]
         self.test = conf["test"]
+        # multithreading
+        self.n_threads = conf["threads"]
+        self.threads = queue.Queue(maxsize=conf["threads"]) # to establish a maximum later
         # proxies
         self.all = queue.Queue()
         self.ready = queue.Queue()
@@ -32,72 +34,83 @@ class ProxyManager:
         # i18n: locale is a str of format "en" or "es"
         self._i18: dict
         # run setup
-        self.__setup(conf["locale"])
+        self._setup(conf["locale"])
 
     # initial setup
-    def __setup(self, locale) -> None:
+    def _setup(self, locale) -> None:
         fn = self.f + " setup: "
         # load locale
         if not locale:
-            self.__load_i18("en")
+            self._load_i18("en")
         else:
-            self.__load_i18(locale)
+            self._load_i18(locale)
         # check test URI
         if not self.validate(self.test["uri"]):
-            raise Exception(self.__t('error.test_uri'))
+            raise Exception(self._t('error.test_uri'))
+        # assign threads
+        for t in range(self.n_threads):
+            self.threads.put(t)
+        print(fn + self._t('setup.threads', str(self.threads.qsize())))
         # start
-        print(fn + self.__t('setup.threads', str(self.threads)))
         return
 
     # proxy list load, thread-safe
     def load(self, path: str):
         fn = self.f + " load: "
+        try:
+            # handle lack of input
+            if not path:
+                raise Exception(self._t('error.no_list'))
 
-        if not path:
-            raise Exception(fn + self.__t('error.no_list'))
-        print(fn + self.__t('load.loading', path))
-        read = 0
+            print(fn + self._t('load.loading', path))
+            read = 0
 
-        # load the list
-        with open(path, "r") as f:
-            arr = f.read().split("\n") # on line break
-            if not arr:
-                raise Exception(fn + self.__t('error.list_empty'))
-            for p in arr:
-                if not p:
-                    continue
-                elif not p[0]: # skip empty
-                    continue
-                elif p[0] == "#": # skip comments
-                    continue
-                else:
-                    read += 1
-                    self.all.put(p)
+            # load the list
+            try:
+                f = open(path, "r")
+            except FileNotFoundError as err:
+                raise Exception(self._t('error.no_file'))
+            else:
+                arr = f.read().split("\n") # on line break
+                if not arr:
+                    raise Exception(self._t('error.list_empty'))
+                for p in arr:
+                    if not p:
+                        continue
+                    elif not p[0]: # skip empty
+                        continue
+                    elif p[0] == "#": # skip comments
+                        # print(fn + "comment: " + p)
+                        continue
+                    else:
+                        read += 1
+                        self.all.put(p)
 
-        print(fn + self.__t('load.n_read', str(read)))
-        n_per_thread = self.all.qsize()/self.threads
-        print(fn + self.__t('load.per_thread', str(n_per_thread)))
-        maxtime = (n_per_thread*(self.test['max']))
-        if maxtime > 60:
-            print(fn + self.__t('load.less_than', (str("{0:.2f}".format(maxtime/60)),"m")))
-        else:
-            print(fn + self.__t('load.less_than', (str("{0:.0f}".format(maxtime)),"s")))
+            print(fn + self._t('load.n_read', str(read)))
+            n_per_thread = self.all.qsize()/self.n_threads
+            print(fn + self._t('load.per_thread', str("{0:.0f}".format(n_per_thread))))
+            maxtime = (n_per_thread*(self.test['max']))
+            if maxtime > 60:
+                print(fn + self._t('load.less_than', (str("{0:.2f}".format(maxtime/60)),"m")))
+            else:
+                print(fn + self._t('load.less_than', (str("{0:.0f}".format(maxtime)),"s")))
 
-        # collect the threads to use
-        threads = []
+            # collect the threads to use
+            threads = []
+            # run health check multi-thread
+            for _ in range(self.n_threads):
+                thread = threading.Thread(target=self.healthcheck)
+                thread.start()
+                threads.append(thread)
+            # wait for threads to complete
+            for thread in threads:
+                thread.join()
 
-        # run health check multi-thread
-        for _ in range(self.threads):
-            thread = threading.Thread(target=self.healthcheck)
-            thread.start()
-            threads.append(thread)
-
-        # wait for threads to complete
-        for thread in threads:
-            thread.join()
-
-        # print available proxies
-        print(self.available().length)
+            # print available proxies and exit
+            print(self.f + ": " + self._t('common.available', str(self.available())))
+            return
+        except Exception as err:
+            print(fn + str(err))
 
     # go through "all" queue and test, thread-safe
     def healthcheck(self) -> None:
@@ -129,7 +142,7 @@ class ProxyManager:
                 continue
 
         # don't throw error here
-        print(fn + self.__t('healthcheck.status', (str(valid), str(broken))))
+        print(fn + self._t('healthcheck.status', (str(valid), str(broken))))
         return
 
     # getter
@@ -159,7 +172,7 @@ class ProxyManager:
             res = urllib.request.urlopen(req, timeout=self.wait['timeout'])
         except Exception as err:
             self.broken.put(p)
-            raise Exception(fn + self.__t('error.get', (p, uri, str(err))))
+            raise Exception(fn + self._t('error.get', (p, uri, str(err))))
         else:
             #print(fn + ": exitoso")
             self.ready.put(p)
@@ -171,7 +184,7 @@ class ProxyManager:
         try:
             # check if URL is valid, or will blow through the list
             if not self.validate(uri):
-                raise Exception(fn + self.__t('error.bad_uri', uri))
+                raise Exception(fn + self._t('error.bad_uri', uri))
 
             #print(fn+": getting " + uri + " ...")
 
@@ -183,15 +196,16 @@ class ProxyManager:
                 time.sleep(random.randint(self.wait['min'], self.wait['max']))
 
                 try:
+                    
                     # getter
                     res = self.get(p, uri)
                     #print('status is: ' + str(res.status))
                 except Exception as err:
-                    raise Exception(fn + self.__t('error.bad_response', str(err.reason)))
+                    raise Exception(fn + self._t('error.bad_response', str(err.reason)))
                 else:
                     return {"success": True, "data": res}
 
-            raise Exception(fn + self.__t('error.no_proxies_avail'))
+            raise Exception(fn + self._t('error.no_proxies_avail'))
         except Exception as err:
             return {"success": False, "error": err}
 
@@ -204,28 +218,24 @@ class ProxyManager:
         except AttributeError:
             return False
 
-    # list available proxies
-    def available(self) -> list:
-        ready = list(self.ready)
-        print(self.f + ": " + self.__t('common.available', str(ready.length)))
+    # count available proxies
+    def available(self) -> int:
+        ready = self.ready.qsize()
+        #print(self.f + ": " + self._t('common.available', str(ready)))
         return ready
 
-    # list broken proxies
-    def broken(self) -> list:
-        arr = list(self.broken)
-        print(self.f + ": "+ self.__t('common.broken', (str(arr.length), str(arr))))
+    # count broken proxies
+    def broken(self) -> int:
+        arr = self.broken.qsize()
+        print(self.f + ": "+ self._t('common.broken', str(arr)))
         return arr
 
-    # private: i18n
-    def __t(self, key: str, insert) -> str:
-        value = self._i18.get(key,"i18n error!")
-        if not insert:
-            return value
-        else:
-            return value.format(insert)
+    # private: i18n (nested 1 level)
+    def _t(self, keys: str, *args) -> str:
+        return self._i18.get(keys.split(".")[0],"i18n error!").get(keys.split(".")[1]).format(list(args))
 
     # private: load i18
-    def __load_i18(self, locale: str) -> None:
+    def _load_i18(self, locale: str) -> None:
         basepath = os.path.dirname(os.path.abspath(__file__))
         locspath = os.path.join(basepath, "locales/")
         filepath = os.path.join(locspath, "{}.json".format(locale))

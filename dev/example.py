@@ -58,22 +58,21 @@ proxies.load(filepath)
 print('>> Waiting for system to be ready...')
 ready = False
 while ready == False:
-    p = proxies.available()
-    if p >= 1:
+    if proxies.available() >= 1:
         ready = True
 
 # set up URLs
 urls = []
 for i in range(2, pages):
     urls.append(url.format(i))
-print(urls)
+#print(urls)
 
 # test URLs
 print('>> Scraping test URLs...')
 scraped = []
-for p in urls:
+for u in urls:
     try:
-        page = proxies.req(p)
+        page = proxies.req(u)
     
         if page['success'] == False:
             raise Exception(str(page['error']))
@@ -81,8 +80,8 @@ for p in urls:
         decoded = page['data'].read().decode(encoding)
         #print(decoded)
         scraped.append(decoded)
-        print("Successfully scraped page " + str(p))
+        print("Successfully scraped page " + str(u))
     except Exception as err:
-        print("Couldn't scrape page " + str(p) + ": " + str(err))
+        print("Couldn't scrape page " + str(u) + ": " + str(err))
 
 print('>> Example completed!')
