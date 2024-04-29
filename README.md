@@ -43,9 +43,11 @@ This project uses semantic versioning.
 - ### 0.2.0 (in development):
     - add i18n
     - consolidate load conf into one dict/json
+    - have default conf, so user doesn't have to set anything up
+    - allow per-request optional headers which overwrite general ones
     - improve input and type checking
     - improve exit condition when 0 proxies available
-    - allow option to select only IPv4, IPv6, or both
+    - global option to select only IPv4, IPv6, or both
 - ### 0.1.2:
     - handle HTTPErrors into general exceptions
     - simplify class name and init for cleaner import
