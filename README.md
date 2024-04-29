@@ -45,6 +45,7 @@ This project uses semantic versioning.
     - consolidate load conf into one dict/json
     - improve input and type checking
     - improve exit condition when 0 proxies available
+    - allow option to select only IPv4, IPv6, or both
 - ### 0.1.2:
     - handle HTTPErrors into general exceptions
     - simplify class name and init for cleaner import
