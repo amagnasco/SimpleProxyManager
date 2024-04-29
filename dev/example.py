@@ -5,7 +5,7 @@
 #################
 
 import os
-from SimpleProxyManager.SimpleProxyManager import SimpleProxyManager
+from SimpleProxyManager import ProxyManager
 
 #################
 #   SETTINGS    #
@@ -15,7 +15,7 @@ from SimpleProxyManager.SimpleProxyManager import SimpleProxyManager
 filename = "proxies.txt"
 
 # number of threads to use
-threads = 10
+threads = 100
 
 # wait time in seconds
 wait = {
@@ -41,7 +41,7 @@ test = {
 
 # example test URL to scrape
 url = "http://books.toscrape.com/catalogue/page-{}.html"
-pages = 20
+pages = 10
 encoding = 'latin1'
 
 #################
@@ -56,7 +56,7 @@ filepath = os.path.join(__location__, filename)
 
 # start
 print('>> Starting up proxy management system...')
-proxies = SimpleProxyManager(threads, wait, headers, test)
+proxies = ProxyManager(threads, wait, headers, test)
 proxies.load(filepath)
 
 # stoplight
@@ -74,7 +74,7 @@ for i in range(2, pages):
 print(urls)
 
 # test URLs
-print('>> Scraping test URLs...')
+print('>> Scraping test URLs (single thread)...')
 scraped = []
 for p in urls:
     try:

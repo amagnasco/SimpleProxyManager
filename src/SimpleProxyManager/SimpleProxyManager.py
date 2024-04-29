@@ -1,7 +1,8 @@
 ### SimpleProxyManager.py
 # by Alessandro G. Magnasco 2024
-# licenced under Creative Commons CC-BY-SA 4.0
+# licenced under GNU GPL
 # https://github.com/amagnasco/SimpleProxyManager
+# https://pypi.org/project/SimpleProxyManager/
 
 # concurrency
 import threading
@@ -13,9 +14,9 @@ from urllib.parse import urlparse
 import random
 import time
 
-class SimpleProxyManager:
+class ProxyManager:
     def __init__(self, threads, wait, headers, test):
-        self.f = "SimpleProxyManager"
+        self.f = "ProxyManager"
         # conf
         self.threads = threads
         self.wait = wait
@@ -167,8 +168,8 @@ class SimpleProxyManager:
                     # getter
                     res = self.get(p, uri)
                     #print('status is: ' + str(res.status))
-                except HTTPError as err:
-                    raise Exception(fn + " error: HTTP response was " + str(err.reason))
+                except Exception as err:
+                    raise Exception(fn + " error: trace: " + str(err))
                 else:
                     return {"success": True, "data": res}
 

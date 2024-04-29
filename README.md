@@ -31,18 +31,24 @@ Major dependencies: requests, urllib3.
 ## Version History
 This project uses semantic versioning. 
 - ### to-do:
-    - !! handle HTTPErrors into general exceptions
-    - !! improve exit condition when 0 proxies available
     - improve usage docs
     - improve error handling
     - add test cases
-    - add i18n
     - improve HTTP status code handling
     - differentiate input proxy list by http/https
     - add a "reset queues to all" method
     - improve manual exit handling
     - abstract proxy assigner method from req
     - improve input and type checking
+- ### 0.2.0 (in development):
+    - add i18n
+    - consolidate load conf into one dict/json
+    - improve input and type checking
+    - improve exit condition when 0 proxies available
+- ### 0.1.2:
+    - handle HTTPErrors into general exceptions
+    - simplify class name and init for cleaner import
+    - updated example
 - ### 0.1.1:
 	- added GitHub > PyPi publication workflow
 - ### 0.1.0:
