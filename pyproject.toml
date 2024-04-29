@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "SimpleProxyManager"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Simple Python multithreaded proxy manager, focused on scrapes"
 readme = "README.md"
 authors = [{ name = "Alessandro G. Magnasco", email = "amagnasco@gradcenter.cuny.edu"}]
@@ -27,3 +27,6 @@ requires-python = ">=3.12"
 
 [project.urls]
 Homepage = "https://github.com/amagnasco/SimpleProxyManager"
+
+[tool.setuptools.dynamic]
+version = {attr = "SimpleProxyManager.__version__"}
