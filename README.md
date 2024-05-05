@@ -1,24 +1,31 @@
 # SimpleProxyManager
-Python multithreaded proxy manager, focused on scrapes
+Multithreaded proxy manager, focused on scrapes.
 
-This project lives at https://github.com/amagnasco/SimpleProxyManager. Feel free to submit an issue or improvements!
-Releases: https://pypi.org/project/SimpleProxyManager/
+## Links: 
+- [PyPi releases](https://pypi.org/project/SimpleProxyManager/)
+- [GitHub releases](https://github.com/amagnasco/SimpleProxyManager/releases)
+- [Example implementation](dev/example.py)
+- [Development](https://github.com/amagnasco/SimpleProxyManager)
+- [Issues and improvements](https://github.com/amagnasco/SimpleProxyManager/issues)
+- [Security](SECURITY.md)
 
-Warning: if using on macOS, don't use this if also using os.fork() due to dependency urllib.request
-
-## Installation:
+## Installation and usage:
 - ```$ pip install simpleproxymanager```
 - For an example implementation, check out [dev/example.py](dev/example.py)
+- Set it up with a list of proxies, then use it to replace your usual HTTP requests.
+- Has several configuration options (currently required, soon to be optional with defaults)
 
-Major dependencies: requests, urllib3.
+### Usage notes:
+- Major dependencies: requests, urllib3.
+- Warning: if using on macOS, don't use this if also using os.fork() due to dependency urllib.request
 
-## Configuration:
+### Configuration:
 - threads: number of processing threads to use
 - wait: minimum and maximum time to wait between requests, and HTTP timeout. All in seconds.
 - headers: HTTP headers to use (user agent, accept, and accept-language)
 - test: URI to use for health check, and minimum and maximum time to wait between each proxy healthcheck (in seconds)
 
-## Public API:
+### Public API:
 - Setup:
     - load: inputs a path to a list of proxies, ingests and tests them.
 - Monitoring:
@@ -29,6 +36,7 @@ Major dependencies: requests, urllib3.
     - validate: inputs a URI, and runs it through urllib's parse
     - req: inputs a URI, validates it, assigns a proxy, and runs get. Returns {success: True, data: Response}, or {success: False, error: Exception}.
     - get: inputs a proxy and URI, and retrieves it. For advanced usage like externally queued/threaded/async'd setups.
+- [Example implementation](dev/example.py)
 
 ## Version History
 This project uses semantic versioning. 
