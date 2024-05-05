@@ -6,11 +6,13 @@ Releases: https://pypi.org/project/SimpleProxyManager/
 
 Warning: if using on macOS, don't use this if also using os.fork() due to dependency urllib.request
 
-For an example implementation, check out dev/example.py.
+## Installation:
+- ```$ pip install simpleproxymanager```
+- For an example implementation, check out [dev/example.py](dev/example.py)
 
 Major dependencies: requests, urllib3.
 
-## Constructor inputs:
+## Configuration:
 - threads: number of processing threads to use
 - wait: minimum and maximum time to wait between requests, and HTTP timeout. All in seconds.
 - headers: HTTP headers to use (user agent, accept, and accept-language)
@@ -48,6 +50,9 @@ This project uses semantic versioning.
     - improve input and type checking
     - improve exit condition when 0 proxies available
     - global option to select only IPv4, IPv6, or both
+- ### 0.1.2a:
+    - add SECURITY.md
+    - update docs
 - ### 0.1.2:
     - handle HTTPErrors into general exceptions
     - simplify class name and init for cleaner import
