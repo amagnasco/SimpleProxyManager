@@ -40,24 +40,6 @@ Multithreaded proxy manager, focused on scrapes.
 
 ## Version History
 This project uses semantic versioning. 
-- ### to-do:
-    - improve usage docs
-    - improve error handling
-    - add test cases
-    - improve HTTP status code handling
-    - differentiate input proxy list by http/https
-    - add a "reset queues to all" method
-    - improve manual exit handling
-    - abstract proxy assigner method from req
-    - improve input and type checking
-- ### 0.2.0 (in development):
-    - add i18n
-    - consolidate load conf into one dict/json
-    - have default conf, so user doesn't have to set anything up
-    - allow per-request optional headers which overwrite general ones
-    - improve input and type checking
-    - improve exit condition when 0 proxies available
-    - global option to select only IPv4, IPv6, or both
 - ### 0.1.2a:
     - add SECURITY.md
     - update docs
