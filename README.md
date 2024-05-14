@@ -40,9 +40,17 @@ Multithreaded proxy manager, focused on scrapes.
 
 ## Version History
 This project uses semantic versioning. 
+- ### 0.2.0:
+    - upgraded concurrency model
+    - fixed broken()
+    - separated out proxy queues by schema
+    - moved http headers from global to per-request
+    - finished moving messages from ES to EN
+    - added method for a pile of ordered requests
+    - updated example
 - ### 0.1.2a:
-    - add SECURITY.md
-    - update docs
+    - added SECURITY.md
+    - updated docs
 - ### 0.1.2:
     - handle HTTPErrors into general exceptions
     - simplify class name and init for cleaner import

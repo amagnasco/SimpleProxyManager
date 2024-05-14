@@ -4,6 +4,7 @@
 #    IMPORTS    #
 #################
 
+import asyncio
 import os
 from SimpleProxyManager import ProxyManager
 
@@ -39,7 +40,7 @@ test = {
     "max": 3
 }
 
-# example test URL to scrape
+# example URL to scrape
 url = "http://books.toscrape.com/catalogue/page-{}.html"
 pages = 10
 encoding = 'latin1'
@@ -48,46 +49,47 @@ encoding = 'latin1'
 #     USAGE     #
 #################
 
-print('>> Welcome to the example for SimpleProxyManager.py!')
+async def example():
+    print('>> Welcome to the example for SimpleProxyManager.py!')
 
-# set workdir
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-filepath = os.path.join(__location__, filename)
+    # set workdir
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    filepath = os.path.join(__location__, filename)
 
-# start
-print('>> Starting up proxy management system...')
-proxies = ProxyManager(threads, wait, headers, test)
-proxies.load(filepath)
+    # start
+    print('>> Starting up proxy management system...')
+    proxies = ProxyManager(threads, wait, test)
+    await proxies.load(filepath)
 
-# stoplight
-print('>> Waiting for system to be ready...')
-ready = False
-while ready == False:
-    p = proxies.available()
-    if p >= 1:
-        ready = True
+    # stoplight
+    print('>> Waiting for system to be ready...')
+    ready = False
+    while ready == False:
+        p = proxies.available()
+        if p >= 1:
+            ready = True
 
-# set up URLs
-urls = []
-for i in range(2, pages):
-    urls.append(url.format(i))
-print(urls)
+    # set up URLs
+    urls = []
+    for i in range(2, pages):
+        urls.append({uri: url.format(i), headers: headers})
+    print(urls)
 
-# test URLs
-print('>> Scraping test URLs (single thread)...')
-scraped = []
-for p in urls:
-    try:
-        page = proxies.req(p)
-    
-        if page['success'] == False:
-            raise Exception(str(page['error']))
+    # test URLs
+    print('>> Scraping test URLs...')
+    requests = await proxies.multiple(urls)
+    scraped = []
+    for page in requests:
+        try:    
+            if page['success'] == False:
+                raise Exception(str(page['error']))
+            # process
+            decoded = page['data'].read().decode(encoding)
+            scraped.append(decoded)
+            print("Successfully scraped page " + str(p))
+        except Exception as err:
+            print("Couldn't scrape page " + str(p) + ": " + str(err))
 
-        decoded = page['data'].read().decode(encoding)
-        #print(decoded)
-        scraped.append(decoded)
-        print("Successfully scraped page " + str(p))
-    except Exception as err:
-        print("Couldn't scrape page " + str(p) + ": " + str(err))
+    print('>> Example completed!')
 
-print('>> Example completed!')
+asyncio.run(example())
