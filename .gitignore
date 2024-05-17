@@ -1,8 +1,8 @@
-# build dependencies
 proxyTestEnv
+env
 SimpleProxyManager.egg-info
 build
 dist
 __pycache__
-
+.idea
 proxies.txt
