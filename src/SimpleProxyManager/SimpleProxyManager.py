@@ -5,18 +5,19 @@
 # https://pypi.org/project/SimpleProxyManager/
 
 # concurrency
-from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import uvloop
 import queue
 # HTTP
-import aiohttp
+# import aiohttp
 from aiohttp_requests import requests
 from urllib.parse import urlparse
 # utilities
 import random
 import re
-from functools import partial
+# from functools import partial
+
 
 class ProxyManager:
     def __init__(self, threads, wait, test):
@@ -98,7 +99,7 @@ class ProxyManager:
             # use test-specific URI for getter
             return await self.get(p, testuri)
         except Exception as err:
-            return # skip errors
+            return  # skip errors
 
     # getter
     async def get(self, p, uri, h):
@@ -124,20 +125,20 @@ class ProxyManager:
 
             # determine schema
             schema = urlparse(uri).scheme
-            queue = None
+            q = None
             if schema == "http":
-                queue = self.http
+                q = self.http
             elif schema == "https":
-                queue = self.https
+                q = self.https
             elif schema == "ftp":
-                queue = self.ftp
+                q = self.ftp
             else:
                 raise Exception(fn + " error: invalid schema!")
 
             # run through queue
-            while not queue.empty():
+            while not q.empty():
                 # assign a new proxy
-                p = queue.get()
+                p = q.get()
                 # wait before requesting
                 await asyncio.sleep(random.randint(self.wait['min'], self.wait['max']))
                 # getter
@@ -155,8 +156,8 @@ class ProxyManager:
     # process a pile of requests concurrently
     # requests are {uri: uri, headers: headers}
     # returns all at once in original order
-    async def multiple(self, requests):
-        return await self.__loopy_manager(requests, self.req)
+    async def multiple(self, reqs):
+        return await self.__loopy_manager(reqs, self.req)
 
     # run async coroutines
     async def __loopy_manager(self, requests, reqfn):
@@ -166,8 +167,8 @@ class ProxyManager:
         return await asyncio.gather(*tasks)
  
     # validate URIs
-    def validate(self, uri):
-        #print("validating "+uri+"...")
+    def validate(self, uri: str) -> bool:
+        # print("validating "+uri+"...")
         try:
             result = urlparse(uri)
             return all([result.scheme, result.netloc])
@@ -183,7 +184,7 @@ class ProxyManager:
         broken = self.broken.qsize()
         ready = http+https+ftp+any
         if ready > 1:
-            print(self.f + " has " + str(any) + " any, "+ str(http) + " http, " + str(https) + " https, " + str(ftp) + " ftp, " + str(broken) + " broken proxies currently available.")
+            print(self.f + " has " + str(any) + " any, " + str(http) + " http, " + str(https) + " https, " + str(ftp) + " ftp, " + str(broken) + " broken proxies currently available.")
             return ready
         else:
             return 0
@@ -193,9 +194,9 @@ class ProxyManager:
         arr = []
         for p in range(0, self.broken.qsize()):
             b = self.broken.get()
-            arr.push(b)
+            arr.append(b)
             self.broken.put(b)
-        print(self.f + " has " + str(arr.length) + " broken proxies: " + str(arr))
+        print(self.f + " has " + str(len(arr)) + " broken proxies: " + str(arr))
         return arr
 
     # classify proxy by schema and replace in correct queue
@@ -215,7 +216,7 @@ class ProxyManager:
                 self.any.put(p)
 
     # regex to determine proxy schema
-    def findschema(self,p):
+    def findschema(self, p):
         # ensures it follows format "(schema://)ip(:port)"
-        format = r"^((ftp|http|https)(?:\:\/\/)){0,1}(?:\d{1,3}(?:\.|\b)){3}(?:\d{1,3}(?:\:|\b)){1}(?:\d{0,8})$"
-        return re.search(format,p)
+        proxyformat = r"^((ftp|http|https)(?:\:\/\/)){0,1}(?:\d{1,3}(?:\.|\b)){3}(?:\d{1,3}(?:\:|\b)){1}(?:\d{0,8})$"
+        return re.search(proxyformat, p)
