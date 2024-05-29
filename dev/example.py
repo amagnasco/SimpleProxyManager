@@ -15,35 +15,10 @@ from SimpleProxyManager import ProxyManager
 # list of proxies
 filename = "proxies.txt"
 
-# number of threads to use
-threads = 100
-
-# wait time in seconds
-wait = {
-    "min": 3,
-    "max": 8,
-    "timeout": 3
-}
-
-# query headers
-headers = {
-    "ua": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0',
-    "accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    "accept_language": 'en-US,en;q=0.5'
-}
-
-# configuration for health check
-# min and max are wait time in seconds, usually shorter than prod
-test = {
-    "uri": "http://books.toscrape.com/",
-    "min": 1,
-    "max": 3
-}
-
 # example URL to scrape
 url = "http://books.toscrape.com/catalogue/page-{}.html"
 pages = 10
-encoding = 'latin1'
+encoding = 'utf-8'
 
 #################
 #     USAGE     #
@@ -58,13 +33,13 @@ async def example():
 
     # start
     print('>> Starting up proxy management system...')
-    proxies = ProxyManager(threads, wait, test)
+    proxies = ProxyManager()
     await proxies.load(filepath)
 
     # stoplight
     print('>> Waiting for system to be ready...')
     ready = False
-    while ready == False:
+    while not ready:
         p = proxies.available()
         if p >= 1:
             ready = True
@@ -81,7 +56,7 @@ async def example():
     scraped = []
     for page in requests:
         try:    
-            if page['success'] == False:
+            if not page['success']:
                 raise Exception(str(page['error']))
             # process
             decoded = page['data'].read().decode(encoding)

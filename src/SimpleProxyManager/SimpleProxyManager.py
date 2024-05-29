@@ -5,27 +5,68 @@
 # https://pypi.org/project/SimpleProxyManager/
 
 # concurrency
-# from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import uvloop
 import queue
 # HTTP
-# import aiohttp
+import urllib3
+import urllib.request, urllib.parse, urllib.error
+import aiohttp
 from aiohttp_requests import requests
 from urllib.parse import urlparse
 # utilities
+import sys
+import logging
 import random
 import re
-# from functools import partial
+from functools import partial
+
+"""     CONFIGURATION       """
+
+DEBUG = False    # for all messages, set to logging.DEBUG
+DEFAULT_THREADS = 100   # TODO dynamic???
+# query headers
+DEFAULT_HEADERS = {
+    "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0',
+    "Accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    "Accept-Language": 'en-US,en;q=0.5'
+}
+
+# configuration for health check
+# min and max are wait time in seconds, usually shorter than prod
+DEFAULT_TEST = {
+    "uri": "http://books.toscrape.com/",
+    "min": 1,
+    "max": 3
+}
+
+# wait time in seconds
+DEFAULT_REQ = {
+    "min": 3,
+    "max": 8,
+    "timeout": 3,
+    "retries": 5,
+    "redirect": True
+}
+
+"""     END OF CONFIG      """
+
+# debug logs
+if DEBUG:
+    logging.getLogger("urllib3").setLevel(DEBUG)
 
 
 class ProxyManager:
-    def __init__(self, threads, wait, test):
+    def __init__(self):
         self.f = "ProxyManager"
         # conf
-        self.threads = threads
-        self.wait = wait
-        self.test = test
+        self.threads = DEFAULT_THREADS
+        self.wait = DEFAULT_REQ
+        self.test = DEFAULT_TEST
+        self.retry = urllib3.Retry(DEFAULT_REQ.retries, redirect=DEFAULT_REQ.redirect)  # TODO rotate proxies on retry
+        self.headers = urllib3.HTTPHeaderDict(DEFAULT_HEADERS)  # TODO do we want to have default headers?
+        self.pool = urllib3.PoolManager(timeout=DEFAULT_REQ.timeout, retries=self.retry, headers=self.headers)  # TODO determine how to juggle this
         # warp time
         self.loop = uvloop.new_event_loop()
         asyncio.set_event_loop(self.loop)
@@ -39,7 +80,7 @@ class ProxyManager:
         # ensure test URI is not broken
         if not self.validate(self.test["uri"]):
             raise Exception("Setup error: invalid test URI!")
-        
+
     # load a list of proxies
     async def load(self, path):
         fn = self.f + " load"
@@ -52,26 +93,26 @@ class ProxyManager:
 
         # load the list
         with open(path, "r") as f:
-            arr = f.read().split("\n") # on line break
+            arr = f.read().split("\n")  # on line break
             if not arr:
                 raise Exception(fn + " error: proxy file is empty! ({})".format(path))
             for p in arr:
                 if not p:
                     continue
-                elif not p[0]: # skip empty
+                elif not p[0]:  # skip empty
                     continue
-                elif p[0] == "#": # skip comments
+                elif p[0] == "#":  # skip comments
                     continue
                 else:
                     read += 1
                     self.unprocessed.put(p)
 
         print(fn + ": " + str(read) + " proxies read from the list...")
-        n_per_thread = self.unprocessed.qsize()/self.threads
+        n_per_thread = self.unprocessed.qsize() / self.threads
         print(fn + ": each thread should test about ~" + str(n_per_thread) + " proxies...")
-        maxtime = (n_per_thread*(self.test['max']))
+        maxtime = (n_per_thread * (self.test['max']))
         if maxtime > 60:
-            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime/60)) + "m...")
+            print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime / 60)) + "m...")
         else:
             print(fn + ": this should take less than " + str("{0:.2f}".format(maxtime)) + "s...")
 
@@ -95,10 +136,10 @@ class ProxyManager:
             # pull a proxy from unprocessed
             p = self.unprocessed.get()
             # use test-specific sleep times
-            await asyncio.sleep(random.randint(self.test["min"], self.test["max"])) 
+            await asyncio.sleep(random.randint(self.test["min"], self.test["max"]))
             # use test-specific URI for getter
             return await self.get(p, testuri)
-        except Exception as err:
+        except Exception:
             return  # skip errors
 
     # getter
@@ -165,9 +206,9 @@ class ProxyManager:
         tasks = [reqfn(request) for request in requests]
         # kick-start the continuum
         return await asyncio.gather(*tasks)
- 
+
     # validate URIs
-    def validate(self, uri: str) -> bool:
+    def validate(self, uri):
         # print("validating "+uri+"...")
         try:
             result = urlparse(uri)
@@ -180,11 +221,12 @@ class ProxyManager:
         http = self.http.qsize()
         https = self.https.qsize()
         ftp = self.ftp.qsize()
-        any = self.any.qsize()
+        anyq = self.any.qsize()
         broken = self.broken.qsize()
-        ready = http+https+ftp+any
+        ready = http + https + ftp + anyq
         if ready > 1:
-            print(self.f + " has " + str(any) + " any, " + str(http) + " http, " + str(https) + " https, " + str(ftp) + " ftp, " + str(broken) + " broken proxies currently available.")
+            print(self.f + " has " + str(anyq) + " any, " + str(http) + " http, " + str(https) + " https, " + str(
+                ftp) + " ftp, " + str(broken) + " broken proxies currently available.")
             return ready
         else:
             return 0
@@ -218,5 +260,5 @@ class ProxyManager:
     # regex to determine proxy schema
     def findschema(self, p):
         # ensures it follows format "(schema://)ip(:port)"
-        proxyformat = r"^((ftp|http|https)(?:\:\/\/)){0,1}(?:\d{1,3}(?:\.|\b)){3}(?:\d{1,3}(?:\:|\b)){1}(?:\d{0,8})$"
-        return re.search(proxyformat, p)
+        rx = r"^((ftp|http|https)(?:\:\/\/)){0,1}(?:\d{1,3}(?:\.|\b)){3}(?:\d{1,3}(?:\:|\b)){1}(?:\d{0,8})$"
+        return re.search(rx, p)
